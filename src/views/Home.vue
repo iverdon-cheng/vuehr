@@ -17,17 +17,26 @@
             <el-container>
                 <el-aside width="200px">
                     <el-menu router>
-                        <el-submenu index="1" v-for="(item,index) in this.$router.options.routes" v-if="!item.hidden" :key="index">
+                        <el-submenu :index="index+''" v-for="(item,index) in routes" v-if="!item.hidden" :key="index">
                             <template slot="title">
-                                <i class="el-icon-location"></i>
-                                <span>{{item.name}}</span>
+                                <i style="color: #5a75ff; margin-right: 15px" :class="item.iconCls"></i>
+                                <span s>{{item.name}}</span>
                             </template>
-                            <el-menu-item :index="child.path" v-for="(child,indexj) in item.children" :key="indexj">{{child.name}}</el-menu-item>
+                            <el-menu-item :index="child.path" v-for="(child,indexj) in item.children" :key="indexj">
+                                {{child.name}}
+                            </el-menu-item>
                         </el-submenu>
                     </el-menu>
                 </el-aside>
                 <el-main>
-                    <router-view/>
+                    <el-breadcrumb separator-class="el-icon-arrow-right" v-if="this.$router.currentRoute.path != '/home'">
+                        <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+                        <el-breadcrumb-item>{{this.$router.currentRoute.name}}</el-breadcrumb-item>
+                    </el-breadcrumb >
+                    <div class="homeWelcome" v-if="this.$router.currentRoute.path == '/home'">
+                        欢迎来到力玺微人事！
+                    </div>
+                    <router-view class="homeRouterView"/>
                 </el-main>
             </el-container>
         </el-container>
@@ -42,6 +51,11 @@
                 user:JSON.parse(window.sessionStorage.getItem("user"))
             }
         },
+        computed:{
+          routes(){
+              return this.$store.state.routes;
+          }
+        },
         methods:{
             // menuClick(index){
             //     this.$router.push(index);
@@ -55,6 +69,7 @@
                     }).then(() => {
                         this.getRequest("/logout");
                         window.sessionStorage.removeItem("user")
+                        this.$store.commit('initRoutes',[])
                         this.$router.replace("/");
                     }).catch(() => {
                         this.$message({
@@ -69,6 +84,16 @@
 </script>
 
 <style scoped>
+    .homeRouterView{
+        margin-top: 25px;
+    }
+    .homeWelcome{
+        text-align: center;
+        font-size: 30px;
+        font-family: 微软雅黑;
+        color: #505458;
+        padding-top: 50px;
+    }
     .homeHeader{
         background-color: #5a75ff;
         display: flex;

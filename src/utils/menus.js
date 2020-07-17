@@ -1,6 +1,6 @@
 import {getRequest} from "./api";
 import da from "element-ui/src/locale/lang/da";
-import router from "../src/router";
+import router from "../router";
 
 export const initMenu=(router,store)=>{
     if (store.state.routes.length > 0){
@@ -36,7 +36,19 @@ export const formatRoutes=(routes)=>{
             meta:meta,
             children:children,
             component(resolve){
-                require(['../views/'+component+'.vue'],resolve);
+                if (component.startsWith("Home")) {
+                    require(['../views/'+component+'.vue'],resolve);
+                }else if (component.startsWith("Emp")) {
+                    require(['../views/emp/'+component+'.vue'],resolve);
+                }else if (component.startsWith("Per")) {
+                    require(['../views/per/'+component+'.vue'],resolve);
+                }else if (component.startsWith("Sta")) {
+                    require(['../views/sta/'+component+'.vue'],resolve);
+                }else if (component.startsWith("Sys")) {
+                    require(['../views/sys/'+component+'.vue'],resolve);
+                }else if (component.startsWith("Sal")) {
+                    require(['../views/sal/'+component+'.vue'],resolve);
+                }
             }
         }
         fmRoutes.push(fmRouter);
