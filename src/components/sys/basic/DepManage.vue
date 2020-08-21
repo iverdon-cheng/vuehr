@@ -1,15 +1,181 @@
 <template>
-    <div>
-        部门管理
+    <div style="width:500px">
+        <el-input
+                prefix-icon="el-icon-search"
+                placeholder="输入部门名称进行搜索……"
+                v-model="filterText">
+        </el-input>
+
+        <el-tree
+                class="filter-tree"
+                :data="deps"
+                :props="defaultProps"
+                :filter-node-method="filterNode"
+                :expand-on-click-node="false"
+                ref="tree">
+                  <span class="custom-tree-node" style="display: flex; justify-content: space-between; width:100%;" slot-scope="{ node, data }">
+                      <span>{{ node.label }}</span>
+                      <span>
+                          <el-button
+                            class="depBtn"
+                            type="primary"
+                            size="mini"
+                            @click="() => showAddDepView(data)"
+                            icon="el-icon-circle-plus-outline">
+                              添加部门
+                            </el-button>
+                          <el-button
+                                  class="depBtn"
+                                  type="danger"
+                                  size="mini"
+                              icon="el-icon-delete"
+                              @click="() => deleteDep(data)">
+                              删除部门
+                          </el-button>
+                        </span>
+                  </span>
+        </el-tree>
+
+        <el-dialog
+                title="添加部门"
+                :visible.sync="dialogVisible"
+                width="30%">
+            <div>
+                <div>
+                    <el-tag>上级部门</el-tag>
+                    <span style="margin-left: 10px">{{pname}}</span>
+                </div>
+                <div style="margin-top: 5px">
+                    <el-tag>部门名称</el-tag>
+                    <el-input v-model="dep.name" size="small" placeholder="请输入部门名称……" style="width: 50%;margin-left: 10px"></el-input>
+                </div>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false" size="small">取 消</el-button>
+                <el-button type="primary"  size="small" @click="doAddDep">确 定</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
 <script>
     export default {
-        name: "DepManage"
+        name: "DepManage",
+        data(){
+            return{
+                filterText:'',
+                dialogVisible:false,
+                dep:{
+                    name:'',
+                    parentId:-1
+                },
+                pname:'',
+                deps:[],
+                defaultProps: {
+                    children: 'children',
+                    label: 'name'
+                }
+            }
+        },
+        mounted() {
+            this.initDeps();
+        },
+        watch: {
+            filterText(val) {
+                this.$refs.tree.filter(val);
+            }
+        },
+        methods:{
+            initDep(){
+                this.dep={
+                    name: '',
+                    parentId: -1,
+                }
+                this.pname='';
+            },
+            initDeps(){
+              this.getRequest("/system/basic/department/").then(resp=>{
+                  if (resp){
+                      this.deps = resp;
+                      console.log(this.deps);
+                  }
+              })
+            },
+            filterNode(value, data) {
+                if (!value) return true;
+                return data.name.indexOf(value) != -1;
+            },
+            showAddDepView(data){
+                this.pname = data.name;
+                this.dep.parentId = data.id;
+                this.dialogVisible=true;
+                console.log(data);
+            },
+            addDep2Deps(deps,dep){
+              for (let i=0; i<deps.length; i++){
+                  let d = deps[i];
+                  if (d.id = dep.parentId){
+                      d.children = d.children.concat(dep);
+                      return;
+                  }else {
+                      this.addDep2Deps(d.children,dep);
+                  }
+              }
+            },
+            doAddDep(){
+                this.postRequest("/system/basic/department/",this.dep).then(resp=>{
+                    if (resp){
+                        console.log(resp.obj);
+                        this.addDep2Deps(this.deps,resp.obj);
+                        this.dialogVisible=false;
+                        //初始化变量
+                        this.initDep();
+                    }
+                })
+            },
+            removeDepFromDeps(deps,id){
+                for (let i = 0; i<deps.length; i++){
+                    let d = deps[i];
+                    if (d.id == id){
+                        deps.splice(i,1);
+                        return;
+                    }else{
+                        this.removeDepFromDeps(d.children, id);
+                    }
+                }
+            },
+            deleteDep(data){
+                if (data.parent){
+                    this.$message.error("父部门删除失败！")
+                }else {
+                    this.$confirm('此操作将永久删除该【'+data.name+'】部门, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        this.deleteRequest("/system/basic/department/"+data.id).then(resp=>{
+                            if (resp){
+                                this.removeDepFromDeps(this.deps,data.id)
+                            }
+                        })
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        });
+                    });
+                    console.log(data)
+                }
+            }
+
+        }
     }
 </script>
 
 <style scoped>
+    .depBtn{
+        padding: 2px;
+    }
 
 </style>

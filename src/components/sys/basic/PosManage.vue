@@ -37,6 +37,17 @@
                         prop="createDate"
                         label="创建时间">
                 </el-table-column>
+                <el-table-column
+                        label="是否启用">
+                    <template slot-scope="scope">
+                        <el-tag size="small" type="success" v-if="scope.row.enabled">
+                            已启用
+                        </el-tag>
+                        <el-tag size="small" type="danger" v-else="scope.row.enabled">
+                            未启用
+                        </el-tag>
+                    </template>
+                </el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-button
@@ -55,10 +66,20 @@
                 title="修改职位"
                 :visible.sync="dialogVisible"
                 width="25%">
-            <div>
-                <el-tag>职位名称</el-tag>
-                <el-input class="updatePosInput" size="small" v-model="updatePos.name"></el-input>
-            </div>
+           <div>
+               <div>
+                   <el-tag>职位名称</el-tag>
+                   <el-input class="updatePosInput" size="small" v-model="updatePos.name"></el-input>
+               </div>
+               <div style="margin-top: 5px">
+                   <el-tag>是否启用</el-tag>
+                   <el-switch
+                           v-model="updatePos.enabled"
+                           active-text="启用"
+                           inactive-text="禁用" style="margin-left: 10px">
+                   </el-switch>
+               </div>
+           </div>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="dialogVisible = false" size="small">取 消</el-button>
                 <el-button type="primary"  size="small" @click="doUpdate">确 定</el-button>
@@ -78,7 +99,8 @@
                 },
                 positions:[],
                 updatePos: {
-                    name: ''
+                    name: '',
+                    enabled:false
                 },
                 dialogVisible: false
             }
