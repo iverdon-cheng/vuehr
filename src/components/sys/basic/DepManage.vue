@@ -112,11 +112,14 @@
                 this.dialogVisible=true;
                 console.log(data);
             },
-            addDep2Deps(deps,dep){
+            addDep2Deps(p,deps,dep){
               for (let i=0; i<deps.length; i++){
                   let d = deps[i];
                   if (d.id = dep.parentId){
                       d.children = d.children.concat(dep);
+                      if (d.children.length>0){
+                        p.parent=true;
+                      }
                       return;
                   }else {
                       this.addDep2Deps(d.children,dep);
@@ -127,21 +130,24 @@
                 this.postRequest("/system/basic/department/",this.dep).then(resp=>{
                     if (resp){
                         console.log(resp.obj);
-                        this.addDep2Deps(this.deps,resp.obj);
+                        this.addDep2Deps(null,this.deps,resp.obj);
                         this.dialogVisible=false;
                         //初始化变量
                         this.initDep();
                     }
                 })
             },
-            removeDepFromDeps(deps,id){
+            removeDepFromDeps(p,deps,id){
                 for (let i = 0; i<deps.length; i++){
                     let d = deps[i];
                     if (d.id == id){
                         deps.splice(i,1);
+                        if (deps.length == 0){
+                          d.parent=false;
+                        }
                         return;
                     }else{
-                        this.removeDepFromDeps(d.children, id);
+                        this.removeDepFromDeps(d,d.children, id);
                     }
                 }
             },
@@ -156,7 +162,7 @@
                     }).then(() => {
                         this.deleteRequest("/system/basic/department/"+data.id).then(resp=>{
                             if (resp){
-                                this.removeDepFromDeps(this.deps,data.id)
+                                this.removeDepFromDeps(null,this.deps,data.id)
                             }
                         })
                     }).catch(() => {
